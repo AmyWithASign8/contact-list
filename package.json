@@ -14,6 +14,9 @@
     "@mantine/core": "^6.0.20",
     "@mantine/hooks": "^6.0.20",
     "@mantine/modals": "^6.0.20",
+    "axios": "^1.5.0",
+    "mobx": "^6.10.2",
+    "mobx-react-lite": "^4.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.46.1"

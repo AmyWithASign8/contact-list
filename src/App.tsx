@@ -1,22 +1,45 @@
-import ContactCard from "./components/Card/Card.tsx";
-import {Button, Center, Group, Modal, SimpleGrid, Text, TextInput, Title} from "@mantine/core";
+import {ContactCard} from "./components/Card/Card.tsx";
+import {Button, Center, Group, Loader, Modal, SimpleGrid, Text, TextInput, Title} from "@mantine/core";
 import {useDisclosure} from "@mantine/hooks";
 import { useForm, SubmitHandler } from "react-hook-form"
 import {ValidateFunc} from "./utils/contact-scheme.ts";
+import ContactsStore from "./store/contactsStore.ts";
+import { observer } from "mobx-react-lite";
+import {useEffect, useState} from "react";
 
 type Inputs = {
   name: string
   phone: string
 }
 
-function App() {
+export const App = observer(() => {
+  const [isLoadingState, setIsLoadingState] = useState(false);
+  const { createContact } = ContactsStore;
+  const { contacts, isLoading, fetchContacts } = ContactsStore;
+  useEffect(() => {
+    fetchContacts()
+  },[])
   const {
     register,
     handleSubmit,
+      reset,
     formState: { errors },
   } = useForm<Inputs>()
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    setIsLoadingState(true);
+    createContact(data)
+        .then(() => {
+          closeModal();
+        })
+        .finally(() => {
+          setIsLoadingState(false);
+        });
+  };
   const [opened, { open, close }] = useDisclosure(false);
+  const closeModal = () => {
+    reset();
+    close();
+  };
   return (
     <>
       <Modal opened={opened} onClose={close} title="Добавление" centered={true}>
@@ -27,7 +50,7 @@ function App() {
           {errors.phone && <Text color={'red'}>{ValidateFunc(errors.phone)}!</Text>}
           <Group position={'center'} mt={10}>
             <Button color={'green'} type={'submit'}>Добавить</Button>
-            <Button color={'red'} onClick={close}>Отмена</Button>
+            <Button color={'red'} onClick={closeModal}>Отмена</Button>
           </Group>
         </form>
       </Modal>
@@ -37,21 +60,13 @@ function App() {
       </Group>
       <Center>
         <SimpleGrid cols={1} mt={10}>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
-          <ContactCard/>
+          {isLoading ? <Loader/> : contacts.length > 0 ? (
+              contacts.map((obj) => (
+                <ContactCard contact={obj}/>
+              ))
+          ) : <Title>Список контактов пуст</Title>}
         </SimpleGrid>
       </Center>
     </>
   )
-}
-
-export default App
+});
